@@ -16,9 +16,11 @@ class TelemetryGraph(pg.PlotWidget):
 class TelemetryBar(QWidget):
     def __init__(self, colour):
         super().__init__()
-        self.setFixedSize(20, 100)
         self.colour: QColor = colour
         self._value = 50
+        self.barHeight = 84
+        self.textZone = 16
+        self.setFixedSize(20, self.textZone + self.barHeight)
 
     def update_value(self, value):
         pass
@@ -26,8 +28,21 @@ class TelemetryBar(QWidget):
     def paintEvent(self, event):
         painter = QPainter(self)
 
+        painter.setPen(Qt.white)
+        f = painter.font()
+        f.setBold(True)
+        painter.setFont(f)
+        text = str(self._value)
+        text_rect = QRect(0, 0, self.width(), self.textZone)
+        painter.drawText(text_rect, Qt.AlignCenter | Qt.AlignVCenter, text)
+
         borderWidth = 1
-        outer = self.rect()
+        outer = QRect(
+            0,
+            self.textZone,
+            self.width(),
+            self.barHeight
+        )
         inner = outer.adjusted(
             borderWidth,
             borderWidth,
