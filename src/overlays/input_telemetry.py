@@ -1,19 +1,22 @@
-import dearpygui.dearpygui as dpg
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QWidget, QLabel
 
-def create_window():
-    with dpg.window(
-        label="Input Telemetry Overlay",
-        width=100,
-        height=100,
-        tag="input_telemetry_overlay",
-        no_background=True,
-        no_resize=True,
-        no_close=True,
-        no_scrollbar=True,
-        no_title_bar=True
-    ):
-        dpg.add_text("Input Telemetry Overlay")
+class InputTelemetryOverlay(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)
+        self.setAttribute(Qt.WA_TranslucentBackground)
+        self.setFixedSize(100, 100)
 
-def close_window():
-    dpg.delete_item("input_telemetry_overlay", children_only=True)
-    dpg.delete_item("input_telemetry_overlay")
+        QLabel("Input Telemetry Overlay", self)
+        self._drag_pos = None
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self._drag_pos = event.globalPosition().toPoint() - self.frameGeometry().topLeft()
+            event.accept()
+
+    def mouseMoveEvent(self, event):
+        if self._drag_pos is not None and event.buttons() & Qt.LeftButton:
+            self.move(event.globalPosition().toPoint() - self._drag_pos)
+            event.accept()
