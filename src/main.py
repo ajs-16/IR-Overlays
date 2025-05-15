@@ -9,9 +9,9 @@ if __name__ == "__main__":
     dpg.show_viewport()
 
     menu.create_window()
+    dpg.set_primary_window("Overlay Menu", True)
 
     while dpg.is_dearpygui_running():
-        dpg.set_primary_window("Overlay Menu", True)
         dpg.render_dearpygui_frame()
 
     dpg.destroy_context()
