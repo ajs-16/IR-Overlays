@@ -1,13 +1,76 @@
-from PySide6.QtCore import Qt, QRectF
-from PySide6.QtGui import QPaintEvent, QColor, QPainterPath, QPainter
-from PySide6.QtWidgets import QWidget, QLabel
+from PySide6.QtCore import Qt, QRect, QRectF
+from PySide6.QtGui import QPaintEvent, QColor, QPainterPath, QPainter, QPen
+from PySide6.QtWidgets import QWidget, QHBoxLayout
+import pyqtgraph as pg
+
+class TelemetryGraph(pg.PlotWidget):
+    def __init__(self):
+        super().__init__()
+        self.setFixedSize(300, 100)
+        self.hideAxis('bottom')
+        self.hideAxis('left')
+
+    def update_graph(self, data):
+        pass
+
+class TelemetryBar(QWidget):
+    def __init__(self, colour):
+        super().__init__()
+        self.setFixedSize(20, 100)
+        self.colour: QColor = colour
+        self._value = 50
+
+    def update_value(self, value):
+        pass
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+
+        borderWidth = 1
+        outer = self.rect()
+        inner = outer.adjusted(
+            borderWidth,
+            borderWidth,
+            -borderWidth,
+            -borderWidth
+        )
+
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(QColor(60, 60, 60, 120))
+        painter.drawRect(inner)
+
+        fillHeight = int(self._value / 100.0 * inner.height())
+        fillRect = QRect(
+            inner.left(),
+            inner.bottom() - fillHeight + 1,
+            inner.width(),
+            fillHeight
+        )
+        painter.setBrush(self.colour)
+        painter.drawRect(fillRect)
+
+        # draw the red fill
+        painter.setBrush(Qt.NoBrush)
+        painter.setPen(QPen(Qt.black, borderWidth))
+        painter.drawRect(inner)
+
+        painter.end()
 
 class InputTelemetryOverlay(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)
         self.setAttribute(Qt.WA_TranslucentBackground)
-        self.setFixedSize(500, 100)
+        self.setFixedSize(500, 110)
+
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(10, 0, 0, 0)
+        layout.setSpacing(5)
+        layout.setAlignment(Qt.AlignLeft)
+
+        layout.addWidget(TelemetryGraph())
+        layout.addWidget(TelemetryBar(QColor(255, 0, 0)))
+        layout.addWidget(TelemetryBar(QColor(0, 255, 0)))
 
         self._drag_pos = None
 
