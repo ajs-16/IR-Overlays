@@ -81,12 +81,36 @@ class TelemetryBar(QWidget):
 
         painter.end()
 
+class TelemetryWheel(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setFixedSize(100, 100)
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+
+        # Center the wheel in the widget
+        diameter = 90
+        x = (self.width() - diameter) // 2
+        y = (self.height() - diameter) // 2
+
+        # Draw wheel
+        painter.setBrush(QColor(40, 40, 40, 255))
+        painter.setPen(Qt.NoPen)
+        painter.drawEllipse(x, y, diameter, diameter)
+
+        # Add border
+        painter.setPen(QPen(Qt.black, 10))
+        painter.setBrush(Qt.NoBrush)
+        painter.drawEllipse(x, y, diameter, diameter)
+
 class InputTelemetryOverlay(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)
         self.setAttribute(Qt.WA_TranslucentBackground)
-        self.setFixedSize(500, 110)
+        self.setFixedSize(470, 110)
 
         layout = QHBoxLayout(self)
         layout.setContentsMargins(10, 0, 0, 0)
@@ -96,6 +120,7 @@ class InputTelemetryOverlay(QWidget):
         layout.addWidget(TelemetryGraph())
         layout.addWidget(TelemetryBar(QColor(255, 0, 0)))
         layout.addWidget(TelemetryBar(QColor(0, 255, 0)))
+        layout.addWidget(TelemetryWheel())
 
         self._drag_pos = None
 
@@ -118,7 +143,7 @@ class InputTelemetryOverlay(QWidget):
         painter.setRenderHint(QPainter.Antialiasing)
 
         # Fill base rectangle
-        painter.fillPath(path, QColor(0, 0, 0, 180))
+        painter.fillPath(path, QColor(0, 0, 0, 200))
 
         painter.setClipPath(path)
 
