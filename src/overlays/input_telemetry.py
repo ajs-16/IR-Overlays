@@ -5,11 +5,21 @@ import pyqtgraph as pg
 
 class TelemetryGraph(pg.PlotWidget):
     def __init__(self):
+        pg.setConfigOption('background', (60, 60, 60, 170))
+
         super().__init__()
         self.setFixedSize(300, 100)
+
+        self.setStyleSheet(
+            """
+            background: transparent;
+            border: 1px solid black;
+            """
+        )
+
         self.hideAxis('bottom')
         self.hideAxis('left')
-
+        
     def update_graph(self, data):
         pass
 
@@ -51,7 +61,7 @@ class TelemetryBar(QWidget):
         )
 
         painter.setPen(Qt.NoPen)
-        painter.setBrush(QColor(60, 60, 60, 120))
+        painter.setBrush(QColor(60, 60, 60, 170))
         painter.drawRect(inner)
 
         fillHeight = int(self._value / 100.0 * inner.height())
