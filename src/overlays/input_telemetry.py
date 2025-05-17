@@ -24,16 +24,22 @@ class TelemetryGraph(pg.PlotWidget):
         pass
 
 class TelemetryBar(QWidget):
-    def __init__(self, colour):
+    def __init__(self, pedal, colour, worker):
         super().__init__()
+        worker.updatedTelemetry.connect(self.update_value)
+
+        self.pedal = pedal
         self.colour: QColor = colour
-        self._value = 50
+        self._value = 0
         self.barHeight = 84
         self.textZone = 16
         self.setFixedSize(20, self.textZone + self.barHeight)
 
-    def update_value(self, value):
-        pass
+    def update_value(self, data):
+        if self.pedal == 'brake' and 'brake' in data:
+            self._value = round(data['brake'] * 100)
+        elif self.pedal == 'throttle' and 'throttle' in data:
+            self._value = round(data['throttle'] * 100)
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -106,7 +112,7 @@ class TelemetryWheel(QWidget):
         painter.drawEllipse(x, y, diameter, diameter)
 
 class InputTelemetryOverlay(QWidget):
-    def __init__(self):
+    def __init__(self, worker):
         super().__init__()
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)
         self.setAttribute(Qt.WA_TranslucentBackground)
@@ -118,8 +124,8 @@ class InputTelemetryOverlay(QWidget):
         layout.setAlignment(Qt.AlignLeft)
 
         layout.addWidget(TelemetryGraph())
-        layout.addWidget(TelemetryBar(QColor(255, 0, 0)))
-        layout.addWidget(TelemetryBar(QColor(0, 255, 0)))
+        layout.addWidget(TelemetryBar('brake', QColor(255, 0, 0), worker))
+        layout.addWidget(TelemetryBar('throttle', QColor(0, 255, 0), worker))
         layout.addWidget(TelemetryWheel())
 
         self._drag_pos = None

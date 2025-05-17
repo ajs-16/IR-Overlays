@@ -1,6 +1,7 @@
-from PySide6.QtCore import QSize, Qt
+from PySide6.QtCore import QSize, Qt, QThread, QTimer
 from PySide6.QtWidgets import QMainWindow, QCheckBox, QVBoxLayout, QWidget, QLabel, QFrame, QSizePolicy
 from overlays.overlays import OverlayType
+from data.worker import IRacingDataWorker
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -8,6 +9,17 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Overlay Menu")
         self.setFixedSize(QSize(250, 400))
 
+        # Data Worker Setup
+        self.irThread = QThread()
+        self.irWorker = IRacingDataWorker()
+        self.irWorker.moveToThread(self.irThread)
+        self.irThread.start()
+
+        self.updateTimer = QTimer(self)
+        self.updateTimer.timeout.connect(self.irWorker.process_data)
+        self.updateTimer.start(16)
+
+        # UI Setup
         layout = QVBoxLayout()
         layout.setSpacing(5)
         layout.setAlignment(Qt.AlignTop)
@@ -27,7 +39,7 @@ class MainWindow(QMainWindow):
         # Checkboxes
         for overlay in OverlayType:
             checkbox = QCheckBox(overlay.label, self)
-            if overlay.widget_cls: checkbox.overlay = overlay.widget_cls()
+            if overlay.widget_cls: checkbox.overlay = overlay.widget_cls(self.irWorker)
             checkbox.stateChanged.connect(self.toggle_overlay)
             layout.addWidget(checkbox)
 
@@ -35,6 +47,11 @@ class MainWindow(QMainWindow):
         container.setLayout(layout)
 
         self.setCentralWidget(container)
+
+    def closeEvent(self, event):
+        self.irThread.quit()
+        self.irThread.wait()
+        super().closeEvent(event)
 
     def toggle_overlay(self):
         sender = self.sender()
