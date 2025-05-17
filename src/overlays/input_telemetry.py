@@ -1,8 +1,9 @@
-from PySide6.QtCore import Qt, QRect, QRectF
+from PySide6.QtCore import Qt, QRect, QRectF, QPointF
 from PySide6.QtGui import QPaintEvent, QColor, QPainterPath, QPainter, QPen
 from PySide6.QtWidgets import QWidget, QHBoxLayout
 import pyqtgraph as pg
 from collections import deque
+import math
 
 pg.setConfigOptions(antialias=True)
 
@@ -126,9 +127,26 @@ class TelemetryBar(QWidget):
         painter.end()
 
 class TelemetryWheel(QWidget):
-    def __init__(self):
+    def __init__(self, worker):
         super().__init__()
+        self.gear = 0
+        self.speed = 0
+        self.wheelAngle = 0.0
+        worker.updatedTelemetry.connect(self.update_metrics)
+
         self.setFixedSize(100, 100)
+
+    def normalise_angle(self, angle):
+        normalised = angle % (2 * math.pi)
+        if normalised < 0: normalised += 2 * math.pi
+
+        return abs(normalised)
+
+    def update_metrics(self, data):
+        self.gear = data['gear']
+        self.speed = data['speed']
+        self.wheelAngle = data['wheelAngle']
+        self.update()
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -136,8 +154,11 @@ class TelemetryWheel(QWidget):
 
         # Center the wheel in the widget
         diameter = 90
+        radius = diameter / 2
         x = (self.width() - diameter) // 2
         y = (self.height() - diameter) // 2
+        cx = x + radius
+        cy = y + radius
 
         # Draw wheel
         painter.setBrush(QColor(40, 40, 40, 255))
@@ -145,9 +166,29 @@ class TelemetryWheel(QWidget):
         painter.drawEllipse(x, y, diameter, diameter)
 
         # Add border
-        painter.setPen(QPen(Qt.black, 10))
+        borderWidth = 10
+        painter.setPen(QPen(Qt.black, borderWidth))
         painter.setBrush(Qt.NoBrush)
         painter.drawEllipse(x, y, diameter, diameter)
+
+        # Draw wheel angle marker
+        painter.save()
+        painter.translate(cx, cy)
+
+        markerWidth = 12
+        markerHeight = 6
+
+        normalisedAngle = self.normalise_angle(self.wheelAngle)
+        drawAngle = -(normalisedAngle)
+        painter.rotate(math.degrees(drawAngle))
+
+        y0 = -radius - (borderWidth/2) + (markerHeight/2)
+
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(Qt.white)
+
+        painter.drawRect(-markerWidth/2, y0, markerWidth, markerHeight)
+        painter.restore()
 
 class InputTelemetryOverlay(QWidget):
     def __init__(self, worker):
@@ -164,7 +205,7 @@ class InputTelemetryOverlay(QWidget):
         layout.addWidget(TelemetryGraph(worker))
         layout.addWidget(TelemetryBar('brake', QColor(255, 0, 0), worker))
         layout.addWidget(TelemetryBar('throttle', QColor(0, 255, 0), worker))
-        layout.addWidget(TelemetryWheel())
+        layout.addWidget(TelemetryWheel(worker))
 
         self._drag_pos = None
 

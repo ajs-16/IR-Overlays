@@ -35,6 +35,9 @@ class IRacingDataWorker(QObject):
             telemetry = {
                 'throttle': round(self.ir['ThrottleRaw'] * 100),
                 'brake': round(self.ir['BrakeRaw'] * 100),
+                'gear': self.ir['Gear'],
+                'speed': self.ir['Speed'],
+                'wheelAngle': self.ir['SteeringWheelAngle']
             }
 
             self.updatedTelemetry.emit(telemetry)
