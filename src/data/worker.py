@@ -20,7 +20,7 @@ class IRacingDataWorker(QObject):
             return
         
         # If not connected, try to connect
-        if not self.ir.startup(test_file='src/data/data.bin'):
+        if not self.ir.startup():
             return
         
         # Startup successful, record connection
@@ -33,8 +33,8 @@ class IRacingDataWorker(QObject):
 
         if self.connected:
             telemetry = {
-                'throttle': self.ir['Throttle'],
-                'brake': self.ir['Brake'],
+                'throttle': round(self.ir['ThrottleRaw'] * 100),
+                'brake': round(self.ir['BrakeRaw'] * 100),
             }
 
             self.updatedTelemetry.emit(telemetry)

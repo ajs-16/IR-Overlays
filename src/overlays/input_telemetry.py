@@ -2,11 +2,13 @@ from PySide6.QtCore import Qt, QRect, QRectF
 from PySide6.QtGui import QPaintEvent, QColor, QPainterPath, QPainter, QPen
 from PySide6.QtWidgets import QWidget, QHBoxLayout
 import pyqtgraph as pg
+from collections import deque
+
+pg.setConfigOptions(antialias=True)
 
 class TelemetryGraph(pg.PlotWidget):
-    def __init__(self):
+    def __init__(self, worker):
         pg.setConfigOption('background', (60, 60, 60, 170))
-
         super().__init__()
         self.setFixedSize(300, 100)
 
@@ -19,9 +21,43 @@ class TelemetryGraph(pg.PlotWidget):
 
         self.hideAxis('bottom')
         self.hideAxis('left')
+
+        # Horizontal grid lines
+        for yVal in [0, 25, 50, 75, 100]:
+            gridLine = pg.InfiniteLine(
+                pos=yVal, 
+                angle=0,
+                pen=pg.mkPen(color=(200, 200, 200, 75), width=1, style=Qt.DotLine)
+            )
+            self.addItem(gridLine)
+
+        self.enableAutoRange(y=False, x=False)
+        self.setXRange(0, 300, padding=0)
+        self.setYRange(-3, 102, padding=0)
+
+        plotItem = self.getPlotItem()
+        plotItem.vb.setLimits(yMin=-3, yMax=102)
+        plotItem.hideButtons()
+        plotItem.setMouseEnabled(x=False, y=False)
+        plotItem.setMenuEnabled(False)
+        self.setToolTip('')
+
+        # Buffers for throttle and brake data
+        self._brakeBuffer = deque(maxlen=300)
+        self._throttleBuffer = deque(maxlen=300)
+
+        self._brakeLine = self.plot(pen=pg.mkPen('r', width=4))
+        self._throttleLine = self.plot(pen=pg.mkPen('g', width=4))
         
+        # Update the graph on updated telemetry signal
+        worker.updatedTelemetry.connect(self.update_graph)
+
     def update_graph(self, data):
-        pass
+        self._brakeBuffer.append(data['brake'])
+        self._throttleBuffer.append(data['throttle'])
+
+        self._brakeLine.setData(self._brakeBuffer)
+        self._throttleLine.setData(self._throttleBuffer)
 
 class TelemetryBar(QWidget):
     def __init__(self, pedal, colour, worker):
@@ -37,9 +73,11 @@ class TelemetryBar(QWidget):
 
     def update_value(self, data):
         if self.pedal == 'brake' and 'brake' in data:
-            self._value = round(data['brake'] * 100)
+            self._value = data['brake']
         elif self.pedal == 'throttle' and 'throttle' in data:
-            self._value = round(data['throttle'] * 100)
+            self._value = data['throttle']
+
+        self.update()
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -123,7 +161,7 @@ class InputTelemetryOverlay(QWidget):
         layout.setSpacing(5)
         layout.setAlignment(Qt.AlignLeft)
 
-        layout.addWidget(TelemetryGraph())
+        layout.addWidget(TelemetryGraph(worker))
         layout.addWidget(TelemetryBar('brake', QColor(255, 0, 0), worker))
         layout.addWidget(TelemetryBar('throttle', QColor(0, 255, 0), worker))
         layout.addWidget(TelemetryWheel())
