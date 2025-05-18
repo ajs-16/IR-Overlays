@@ -33,7 +33,7 @@ class TelemetryGraph(pg.PlotWidget):
             self.addItem(gridLine)
 
         self.enableAutoRange(y=False, x=False)
-        self.setXRange(0, 300, padding=0)
+        self.setXRange(0, 500, padding=0)
         self.setYRange(-3, 102, padding=0)
 
         plotItem = self.getPlotItem()
@@ -44,8 +44,8 @@ class TelemetryGraph(pg.PlotWidget):
         self.setToolTip('')
 
         # Buffers for throttle and brake data
-        self._brakeBuffer = deque(maxlen=300)
-        self._throttleBuffer = deque(maxlen=300)
+        self._brakeBuffer = deque(maxlen=500)
+        self._throttleBuffer = deque(maxlen=500)
 
         self._brakeLine = self.plot(pen=pg.mkPen('r', width=4))
         self._throttleLine = self.plot(pen=pg.mkPen('g', width=4))
