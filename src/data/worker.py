@@ -28,6 +28,15 @@ class IRacingDataWorker(QObject):
             self.connected = True
             self.connectionChanged.emit(True)
 
+    @staticmethod
+    def convert_gear(numericGear):
+        if numericGear == -1:
+            return "R"
+        elif numericGear == 0:
+            return "N"
+        else:
+            return str(numericGear)
+
     def process_data(self):
         self.update_connection()
 
@@ -35,8 +44,8 @@ class IRacingDataWorker(QObject):
             telemetry = {
                 'throttle': round(self.ir['ThrottleRaw'] * 100),
                 'brake': round(self.ir['BrakeRaw'] * 100),
-                'gear': self.ir['Gear'],
-                'speed': self.ir['Speed'],
+                'gear': self.convert_gear(self.ir['Gear']),
+                'speed': round(self.ir['Speed']),
                 'wheelAngle': self.ir['SteeringWheelAngle']
             }
 

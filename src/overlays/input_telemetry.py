@@ -1,5 +1,5 @@
 from PySide6.QtCore import Qt, QRect, QRectF, QPointF
-from PySide6.QtGui import QPaintEvent, QColor, QPainterPath, QPainter, QPen
+from PySide6.QtGui import QPaintEvent, QColor, QPainterPath, QPainter, QPen, QFont, QFontMetricsF
 from PySide6.QtWidgets import QWidget, QHBoxLayout
 import pyqtgraph as pg
 from collections import deque
@@ -84,12 +84,9 @@ class TelemetryBar(QWidget):
         painter = QPainter(self)
 
         painter.setPen(Qt.white)
-        f = painter.font()
-        f.setBold(True)
-        painter.setFont(f)
-        text = str(self._value)
+        painter.setFont(QFont("Roboto", 10, QFont.Bold))
         text_rect = QRect(0, 0, self.width(), self.textZone)
-        painter.drawText(text_rect, Qt.AlignCenter | Qt.AlignVCenter, text)
+        painter.drawText(text_rect, Qt.AlignCenter | Qt.AlignVCenter, str(self._value))
 
         borderWidth = 1
         outer = QRect(
@@ -132,6 +129,14 @@ class TelemetryWheel(QWidget):
         self.gear = 0
         self.speed = 0
         self.wheelAngle = 0.0
+
+        self._fonts = {
+            'gear': QFont("Roboto", 20, QFont.Bold),
+            'speed': QFont("Roboto", 18, QFont.Bold),
+            'unit': QFont("Roboto", 11, QFont.Bold)
+        }
+        self._metrics = {k: QFontMetricsF(f) for k, f in self._fonts.items()}
+
         worker.updatedTelemetry.connect(self.update_metrics)
 
         self.setFixedSize(100, 100)
@@ -188,6 +193,26 @@ class TelemetryWheel(QWidget):
         painter.setBrush(Qt.white)
 
         painter.drawRect(-markerWidth/2, y0, markerWidth, markerHeight)
+        painter.restore()
+
+        # Draw gear and speed
+        painter.save()
+        painter.translate(cx, cy)
+        painter.setPen(Qt.white)
+
+        items = [
+            ('gear', self.gear, QPointF(0,-radius * 0.25)),
+            ('unit', 'kph', QPointF(0, +radius * 0.25)),
+            ('speed', str(self.speed), QPointF(0, +radius * 0.75)),
+        ]
+
+        for key, text, pos in items:
+            font = self._fonts[key]
+            fm = self._metrics[key]
+            width = fm.horizontalAdvance(text)
+            painter.setFont(font)
+            painter.drawText(pos - QPointF(width/2, 0), text)
+
         painter.restore()
 
 class InputTelemetryOverlay(QWidget):
