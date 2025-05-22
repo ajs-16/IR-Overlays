@@ -126,7 +126,7 @@ class TelemetryBar(QWidget):
 class TelemetryWheel(QWidget):
     def __init__(self, worker):
         super().__init__()
-        self.gear = 0
+        self.gear = "N"
         self.speed = 0
         self.wheelAngle = 0.0
 

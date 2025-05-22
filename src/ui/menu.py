@@ -1,7 +1,9 @@
-from PySide6.QtCore import QSize, Qt, QThread, QTimer
+from PySide6.QtCore import QSize, Qt, QThread, QTimer, QPoint
 from PySide6.QtWidgets import QMainWindow, QCheckBox, QVBoxLayout, QWidget, QLabel, QFrame, QSizePolicy
 from overlays.overlays import OverlayType
 from data.worker import IRacingDataWorker
+import pickle
+from state import appState
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -39,9 +41,21 @@ class MainWindow(QMainWindow):
         # Checkboxes
         for overlay in OverlayType:
             checkbox = QCheckBox(overlay.label, self)
-            if overlay.widget_cls: checkbox.overlay = overlay.widget_cls(self.irWorker)
+            checkbox.setObjectName(overlay.label)
             checkbox.stateChanged.connect(self.toggle_overlay)
+
+            if overlay.widget_cls: 
+                checkbox.overlay = overlay.widget_cls(self.irWorker)
+
             layout.addWidget(checkbox)
+
+            if appState.state.get(overlay.label, None):
+                checkbox.setChecked(appState.state[overlay.label]['enabled'])
+            else:
+                appState.state[overlay.label] = {
+                    'enabled': False,
+                    'pos': QPoint(0, 0)
+                }
 
         container = QWidget()
         container.setLayout(layout)
@@ -49,12 +63,27 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(container)
 
     def closeEvent(self, event):
+        for overlay in OverlayType:
+            checkbox = self.findChild(QCheckBox, overlay.label)
+            if checkbox and hasattr(checkbox, 'overlay'):
+                appState.state[overlay.label]['pos'] = checkbox.overlay.pos()
+
         self.irThread.quit()
         self.irThread.wait()
+
+        with open('src/tmp/state.pickle', 'wb') as f:
+            pickle.dump(appState.state, f)
+
         super().closeEvent(event)
 
     def toggle_overlay(self):
         sender = self.sender()
 
-        if sender.isChecked(): sender.overlay.show()
-        else: sender.overlay.hide()
+        if sender.isChecked():
+            sender.overlay.move(appState.state[sender.text()]['pos'])
+            sender.overlay.show()
+            appState.state[sender.text()]['enabled'] = True
+        else:
+            appState.state[sender.text()]['pos'] = sender.overlay.pos()
+            sender.overlay.hide()
+            appState.state[sender.text()]['enabled'] = False
