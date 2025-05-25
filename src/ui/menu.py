@@ -1,15 +1,24 @@
-from PySide6.QtCore import QSize, Qt, QThread, QTimer, QPoint
-from PySide6.QtWidgets import QMainWindow, QCheckBox, QVBoxLayout, QWidget, QLabel, QFrame, QSizePolicy
+from PySide6.QtCore import QSize, Qt, QThread, QTimer
+from PySide6.QtWidgets import (
+    QMainWindow, QCheckBox, QVBoxLayout,
+    QWidget, QLabel, QFrame, QSizePolicy,
+    QScrollArea
+)
+from PySide6.QtGui import QIcon
 from overlays.overlays import OverlayType
 from data.worker import IRacingDataWorker
 import pickle
 from state import appState
+from .menu_item import MenuItem
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Overlay Menu")
-        self.setFixedSize(QSize(250, 400))
+        self.setWindowTitle("IR Overlays")
+        self.icon = QIcon()
+        self.icon.addFile("src/assets/IR_LOGO.png")
+        self.setWindowIcon(self.icon)
+        self.setFixedSize(QSize(250, 300))
 
         # Data Worker Setup
         self.irThread = QThread()
@@ -22,12 +31,32 @@ class MainWindow(QMainWindow):
         self.updateTimer.start(16)
 
         # UI Setup
-        layout = QVBoxLayout()
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        scroll.setStyleSheet("""
+            QScrollArea { 
+                border: none;
+                background: transparent;
+            }
+            QScrollBar:vertical {
+                width: 8px;
+                background: transparent;
+            }
+            QScrollBar::handle:vertical {
+                background: #666;
+                border-radius: 4px;
+            }
+        """)
+
+        container = QWidget()
+        layout = QVBoxLayout(container)
         layout.setSpacing(5)
         layout.setAlignment(Qt.AlignTop)
         
         # Title
-        title = QLabel("Select Overlays")
+        title = QLabel("Overlays")
         title.setStyleSheet("font-weight: bold; font-size: 16px;")
         title.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         layout.addWidget(title)
@@ -38,35 +67,22 @@ class MainWindow(QMainWindow):
         divider.setFrameShadow(QFrame.Sunken)
         layout.addWidget(divider)
         
-        # Checkboxes
+        # Menu Items
         for overlay in OverlayType:
-            checkbox = QCheckBox(overlay.label, self)
-            checkbox.setObjectName(overlay.label)
-            checkbox.stateChanged.connect(self.toggle_overlay)
-
-            if overlay.widget_cls: 
-                checkbox.overlay = overlay.widget_cls(self.irWorker)
-
-            layout.addWidget(checkbox)
-
-            if appState.state.get(overlay.label, None):
-                checkbox.setChecked(appState.state[overlay.label]['enabled'])
-            else:
-                appState.state[overlay.label] = {
-                    'enabled': False,
-                    'pos': QPoint(0, 0)
-                }
-
-        container = QWidget()
-        container.setLayout(layout)
-
-        self.setCentralWidget(container)
+            layout.addWidget(
+                MenuItem(
+                    overlay,
+                    self.irWorker
+                )
+            )
+        
+        scroll.setWidget(container)
+        self.setCentralWidget(scroll)
 
     def closeEvent(self, event):
         for overlay in OverlayType:
-            checkbox = self.findChild(QCheckBox, overlay.label)
-            if checkbox and hasattr(checkbox, 'overlay'):
-                appState.state[overlay.label]['pos'] = checkbox.overlay.pos()
+            menuItem = self.findChild(QWidget, f"menu_item_{overlay.label}")
+            appState.state[overlay.label]['pos'] = menuItem.overlayWidget.pos()
 
         self.irThread.quit()
         self.irThread.wait()

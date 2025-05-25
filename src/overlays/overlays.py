@@ -1,13 +1,10 @@
 from enum import Enum
 from overlays.input_telemetry import InputTelemetryOverlay
+from overlays.radar import RadarOverlay
 
 class OverlayType(Enum):
     INPUT_TELEMETRY  = ("Input Telemetry",    InputTelemetryOverlay)
-    LAPTIMES         = ("Laptimes",           None)
-    LAPTIME_DELTA    = ("Laptime Delta",      None)
-    STANDINGS        = ("Standings",          None)
-    RELATIVES        = ("Relatives",          None)
-    RADAR            = ("Radar",              None)
+    RADAR            = ("Radar",              RadarOverlay)
 
     def __init__(self, label, widget_cls):
         self.label      = label
