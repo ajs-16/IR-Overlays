@@ -1,10 +1,10 @@
 from PySide6.QtCore import QSize, Qt, QThread, QTimer
 from PySide6.QtWidgets import (
-    QMainWindow, QCheckBox, QVBoxLayout,
-    QWidget, QLabel, QFrame, QSizePolicy,
+    QMainWindow, QVBoxLayout,
+    QWidget, QLabel, QFrame,
     QScrollArea
 )
-from PySide6.QtGui import QIcon
+from PySide6.QtGui import QIcon, QPalette, QColor, QFont
 from overlays.overlays import OverlayType
 from data.worker import IRacingDataWorker
 import pickle
@@ -14,11 +14,16 @@ from .menu_item import MenuItem
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("IR Overlays")
+        self.setWindowTitle("IRO")
         self.icon = QIcon()
         self.icon.addFile("src/assets/IR_LOGO.png")
         self.setWindowIcon(self.icon)
         self.setFixedSize(QSize(250, 300))
+
+        self.setAutoFillBackground(True)
+        palette = self.palette()
+        palette.setColor(QPalette.Window, QColor("#181f2a"))
+        self.setPalette(palette)
 
         # Data Worker Setup
         self.irThread = QThread()
@@ -34,7 +39,7 @@ class MainWindow(QMainWindow):
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         scroll.setStyleSheet("""
             QScrollArea { 
                 border: none;
@@ -51,24 +56,27 @@ class MainWindow(QMainWindow):
         """)
 
         container = QWidget()
+        container.setStyleSheet("background: transparent;")
         layout = QVBoxLayout(container)
         layout.setSpacing(5)
         layout.setAlignment(Qt.AlignTop)
         
         # Title
-        title = QLabel("Overlays")
-        title.setStyleSheet("font-weight: bold; font-size: 16px;")
-        title.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        title = QLabel("Select Overlays")
+        title.setFont(QFont("Roboto", 13))
+        title.setStyleSheet("color: #e0e3e7;")
         layout.addWidget(title)
 
         # Divider
         divider = QFrame()
         divider.setFrameShape(QFrame.HLine)
         divider.setFrameShadow(QFrame.Sunken)
+        divider.setStyleSheet("background-color: #404958;")
         layout.addWidget(divider)
         
         # Menu Items
         for overlay in OverlayType:
+            layout.addSpacing(8)
             layout.addWidget(
                 MenuItem(
                     overlay,
