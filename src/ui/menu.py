@@ -91,15 +91,3 @@ class MainWindow(QMainWindow):
             pickle.dump(appState.state, f)
 
         super().closeEvent(event)
-
-    def toggle_overlay(self):
-        sender = self.sender()
-
-        if sender.isChecked():
-            sender.overlay.move(appState.state[sender.text()]['pos'])
-            sender.overlay.show()
-            appState.state[sender.text()]['enabled'] = True
-        else:
-            appState.state[sender.text()]['pos'] = sender.overlay.pos()
-            sender.overlay.hide()
-            appState.state[sender.text()]['enabled'] = False

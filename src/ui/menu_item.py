@@ -22,7 +22,7 @@ class MenuItem(QWidget):
         self.topLayout.setContentsMargins(5, 5, 5, 5)
 
         self.checkbox = QCheckBox()
-        self.checkbox.stateChanged.connect(self._checkbox_toggled)
+        self.checkbox.stateChanged.connect(self._toggle_overlay)
         
         self.label = QLabel(self.overlayLabel)
         
@@ -43,6 +43,9 @@ class MenuItem(QWidget):
         self.MainVLayout.addWidget(self.topRow)
         self.MainVLayout.addWidget(self.dropdownContent)
 
+        self._load_state()
+
+    def _load_state(self):
         if appState.state.get(self.overlayLabel, None):
             self.checkbox.setChecked(appState.state[self.overlayLabel]['enabled'])
         else:
@@ -59,5 +62,14 @@ class MenuItem(QWidget):
         self.dropdownContent.setVisible(self.expanded)
         self.dropdownBtn.setText("▼" if not self.expanded else "▲")
 
-    def _checkbox_toggled(self):
-        print("toggled")
+    def _toggle_overlay(self):
+        sender = self.sender()
+
+        if sender.isChecked():
+            self.overlayWidget.move(appState.state[self.overlayLabel]['pos'])
+            self.overlayWidget.show()
+            appState.state[self.overlayLabel]['enabled'] = True
+        else:
+            appState.state[self.overlayLabel]['pos'] = self.overlayWidget.pos()
+            self.overlayWidget.hide()
+            appState.state[self.overlayLabel]['enabled'] = False
