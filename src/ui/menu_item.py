@@ -24,8 +24,8 @@ class MenuItem(QWidget):
         """)
 
         self._init_ui()
-        self._load_settings()
         self._load_state()
+        self._load_settings()
 
     def _init_ui(self):
         self.MainVLayout = QVBoxLayout(self)
@@ -111,12 +111,13 @@ class MenuItem(QWidget):
         else:
             appState.state[self.overlayLabel] = {
                 'enabled': False,
-                'pos': QPoint(0, 0)
+                'pos': QPoint(0, 0),
+                'scale': 100
             }
 
     def _load_settings(self):
         for setting in self.overlaySettings:
-            widget = setting()
+            widget = setting(self.overlayLabel)
             self.add_dropdown_item(widget)
 
     def add_dropdown_item(self, widget):

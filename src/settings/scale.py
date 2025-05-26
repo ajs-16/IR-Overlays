@@ -1,12 +1,14 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QSlider
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
+from state import appState
 
 class Scale(QWidget):
-    def __init__(self):
+    def __init__(self, overlayLabel):
         super().__init__()
-        self.setObjectName("scale_setting_widget")
-        
+        self.setObjectName(f"{overlayLabel}_scale_setting")
+        self.overlayLabel = overlayLabel
+
         layout = QVBoxLayout(self)
         layout.setContentsMargins(5, 5, 5, 5)
         layout.setSpacing(5)
@@ -19,7 +21,8 @@ class Scale(QWidget):
         self.slider = QSlider(Qt.Horizontal)
         self.slider.setMinimum(50)
         self.slider.setMaximum(150)
-        self.slider.setValue(100)
+        self.slider.setValue(appState.state[self.overlayLabel]['scale'])
+        self.slider.valueChanged.connect(self._update_state)
         self.slider.setStyleSheet("""
             QSlider::groove:horizontal {
                 height: 4px;
@@ -39,8 +42,5 @@ class Scale(QWidget):
         """)
         layout.addWidget(self.slider)
 
-    def get_scale(self):
-        return self.slider.value() / 100.0
-
-    def set_scale(self, value):
-        self.slider.setValue(int(value * 100))
+    def _update_state(self):
+        appState.state[self.overlayLabel]['scale'] = self.slider.value()
