@@ -22,8 +22,8 @@ class Scale(QWidget):
         layout.addWidget(self.label)
 
         self.slider = QSlider(Qt.Horizontal)
-        self.slider.setMinimum(50)
-        self.slider.setMaximum(150)
+        self.slider.setMinimum(75)
+        self.slider.setMaximum(125)
         self.slider.setValue(appState.state[self.overlayLabel]['scale'])
         self.slider.valueChanged.connect(self._update_state)
         self.slider.setStyleSheet("""
