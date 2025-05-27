@@ -1,11 +1,14 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QSlider
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QFont
 from state import appState
 
 class Scale(QWidget):
+    scaleChanged = Signal(int)
+
     def __init__(self, overlayLabel):
         super().__init__()
+        self.settingName = "Scale"
         self.setObjectName(f"{overlayLabel}_scale_setting")
         self.overlayLabel = overlayLabel
 
@@ -13,7 +16,7 @@ class Scale(QWidget):
         layout.setContentsMargins(5, 5, 5, 5)
         layout.setSpacing(5)
 
-        self.label = QLabel("Scale")
+        self.label = QLabel(self.settingName)
         self.label.setFont(QFont("Roboto", 10))
         self.label.setStyleSheet("color: #babdc3;")
         layout.addWidget(self.label)
@@ -44,3 +47,4 @@ class Scale(QWidget):
 
     def _update_state(self):
         appState.state[self.overlayLabel]['scale'] = self.slider.value()
+        self.scaleChanged.emit(self.slider.value())

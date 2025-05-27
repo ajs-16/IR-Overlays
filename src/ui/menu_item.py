@@ -11,10 +11,9 @@ class MenuItem(QWidget):
     def __init__(self, overlay, IRWorker):
         super().__init__()
         self.overlayLabel = overlay.label
-        self.overlayWidget = overlay.widget_cls(IRWorker)
-        self.overlaySettings = overlay.settings
         self.setObjectName(f"menu_item_{overlay.label}")
         self.expanded = False
+
         self.chevDown = qta.icon('fa5s.chevron-down', color='white', scale_factor=0.75)
         self.chevUp = qta.icon('fa5s.chevron-up', color='white', scale_factor=0.75)
         self.setStyleSheet("""
@@ -22,10 +21,17 @@ class MenuItem(QWidget):
             border: 1px solid #404958;
             border-radius: 2px;
         """)
-
         self._init_ui()
+
+        self.overlaySettings = {}
+        self._load_settings(overlay.settings)
+
+        self.overlayWidget = overlay.widget_cls(
+            IRWorker,
+            self.overlaySettings
+        )
+          
         self._load_state()
-        self._load_settings()
 
     def _init_ui(self):
         self.MainVLayout = QVBoxLayout(self)
@@ -115,9 +121,10 @@ class MenuItem(QWidget):
                 'scale': 100
             }
 
-    def _load_settings(self):
-        for setting in self.overlaySettings:
+    def _load_settings(self, settings):
+        for setting in settings:
             widget = setting(self.overlayLabel)
+            self.overlaySettings[widget.settingName] = widget
             self.add_dropdown_item(widget)
 
     def add_dropdown_item(self, widget):

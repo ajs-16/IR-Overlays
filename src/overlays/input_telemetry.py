@@ -11,7 +11,6 @@ class TelemetryGraph(pg.PlotWidget):
     def __init__(self, worker):
         pg.setConfigOption('background', (60, 60, 60, 170))
         super().__init__()
-        self.setFixedSize(300, 100)
 
         self.setStyleSheet(
             """
@@ -68,9 +67,6 @@ class TelemetryBar(QWidget):
         self.pedal = pedal
         self.colour: QColor = colour
         self._value = 0
-        self.barHeight = 84
-        self.textZone = 16
-        self.setFixedSize(20, self.textZone + self.barHeight)
 
     def update_value(self, data):
         if self.pedal == 'brake' and 'brake' in data:
@@ -82,18 +78,22 @@ class TelemetryBar(QWidget):
 
     def paintEvent(self, event):
         painter = QPainter(self)
+        w, h = self.width(), self.height()
+
+        textH = h * 0.16
+        barH = h - textH
 
         painter.setPen(Qt.white)
-        painter.setFont(QFont("Roboto", 10, QFont.Bold))
-        text_rect = QRect(0, 0, self.width(), self.textZone)
+        painter.setFont(QFont("Roboto", textH * 0.8, QFont.Bold))
+        text_rect = QRect(0, 0, w, textH)
         painter.drawText(text_rect, Qt.AlignCenter | Qt.AlignVCenter, str(self._value))
 
         borderWidth = 1
         outer = QRect(
             0,
-            self.textZone,
-            self.width(),
-            self.barHeight
+            textH,
+            w,
+            barH
         )
         inner = outer.adjusted(
             borderWidth,
@@ -116,7 +116,7 @@ class TelemetryBar(QWidget):
         painter.setBrush(self.colour)
         painter.drawRect(fillRect)
 
-        # draw the red fill
+        # draw the colour fill
         painter.setBrush(Qt.NoBrush)
         painter.setPen(QPen(Qt.black, borderWidth))
         painter.drawRect(inner)
@@ -130,16 +130,7 @@ class TelemetryWheel(QWidget):
         self.speed = 0
         self.wheelAngle = 0.0
 
-        self._fonts = {
-            'gear': QFont("Roboto", 20, QFont.Bold),
-            'speed': QFont("Roboto", 18, QFont.Bold),
-            'unit': QFont("Roboto", 11, QFont.Bold)
-        }
-        self._metrics = {k: QFontMetricsF(f) for k, f in self._fonts.items()}
-
         worker.updatedTelemetry.connect(self.update_metrics)
-
-        self.setFixedSize(100, 100)
 
     def normalise_angle(self, angle):
         normalised = angle % (2 * math.pi)
@@ -156,12 +147,20 @@ class TelemetryWheel(QWidget):
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
+        w, h = self.width(), self.height()
+
+        fonts = {
+            'gear': QFont("Roboto", w * 0.2, QFont.Bold),
+            'speed': QFont("Roboto", w * 0.18, QFont.Bold),
+            'unit': QFont("Roboto", w * 0.11, QFont.Bold)
+        }
+        fontMetrics = {k: QFontMetricsF(f) for k, f in fonts.items()}
 
         # Center the wheel in the widget
-        diameter = 90
+        diameter = w * 0.9
         radius = diameter / 2
-        x = (self.width() - diameter) // 2
-        y = (self.height() - diameter) // 2
+        x = (w - diameter) // 2
+        y = (h - diameter) // 2
         cx = x + radius
         cy = y + radius
 
@@ -171,7 +170,7 @@ class TelemetryWheel(QWidget):
         painter.drawEllipse(x, y, diameter, diameter)
 
         # Add border
-        borderWidth = 10
+        borderWidth = w * 0.1
         painter.setPen(QPen(Qt.black, borderWidth))
         painter.setBrush(Qt.NoBrush)
         painter.drawEllipse(x, y, diameter, diameter)
@@ -180,8 +179,8 @@ class TelemetryWheel(QWidget):
         painter.save()
         painter.translate(cx, cy)
 
-        markerWidth = 12
-        markerHeight = 6
+        markerWidth = w * 0.12
+        markerHeight = w * 0.06
 
         normalisedAngle = self.normalise_angle(self.wheelAngle)
         drawAngle = -(normalisedAngle)
@@ -207,8 +206,8 @@ class TelemetryWheel(QWidget):
         ]
 
         for key, text, pos in items:
-            font = self._fonts[key]
-            fm = self._metrics[key]
+            font = fonts[key]
+            fm = fontMetrics[key]
             width = fm.horizontalAdvance(text)
             painter.setFont(font)
             painter.drawText(pos - QPointF(width/2, 0), text)
@@ -216,23 +215,30 @@ class TelemetryWheel(QWidget):
         painter.restore()
 
 class InputTelemetryOverlay(QWidget):
-    def __init__(self, worker):
+    def __init__(self, worker, settings):
         super().__init__()
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)
         self.setAttribute(Qt.WA_TranslucentBackground)
-        self.setFixedSize(470, 110)
+        self.baseWidth = 470
+        self.baseHeight = 110
 
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(10, 0, 0, 0)
-        layout.setSpacing(5)
-        layout.setAlignment(Qt.AlignLeft)
+        self.layout = QHBoxLayout(self)
+        self.layout.setAlignment(Qt.AlignLeft)
 
-        layout.addWidget(TelemetryGraph(worker))
-        layout.addWidget(TelemetryBar('brake', QColor(255, 0, 0), worker))
-        layout.addWidget(TelemetryBar('throttle', QColor(0, 255, 0), worker))
-        layout.addWidget(TelemetryWheel(worker))
+        self.graph = TelemetryGraph(worker)
+        self.brakeBar = TelemetryBar('brake', QColor(255, 0, 0), worker)
+        self.throttleBar = TelemetryBar('throttle', QColor(0, 255, 0), worker)
+        self.wheel = TelemetryWheel(worker)
+
+        self.layout.addWidget(self.graph)
+        self.layout.addWidget(self.brakeBar)
+        self.layout.addWidget(self.throttleBar)
+        self.layout.addWidget(self.wheel)
 
         self._drag_pos = None
+
+        self.apply_scaling(settings['Scale'].slider.value())
+        settings['Scale'].scaleChanged.connect(self.apply_scaling)
 
     def paintEvent(self, event: QPaintEvent):
         w = self.width()
@@ -258,11 +264,25 @@ class InputTelemetryOverlay(QWidget):
         painter.setClipPath(path)
 
         # Add Stripe
-        stripeWidth = 5
+        stripeWidth = w * 0.01
         stripeRect = QRectF(0, 0, stripeWidth, h)
         painter.fillRect(stripeRect, QColor(0, 0, 255, 200))
 
         painter.end()
+    
+    def apply_scaling(self, scale):
+        sf = scale / 100
+        newWidth = int(self.baseWidth * sf)
+        newHeight = int(self.baseHeight * sf)
+
+        self.setFixedSize(newWidth, newHeight)
+        self.layout.setContentsMargins(newWidth * 0.02, 0, 0, 0)
+        self.layout.setSpacing(newWidth * 0.012)
+
+        self.graph.setFixedSize(300 * sf, 100 * sf)
+        self.brakeBar.setFixedSize(20 * sf, 100 * sf)
+        self.throttleBar.setFixedSize(20 * sf, 100 * sf)
+        self.wheel.setFixedSize(100 * sf, 100 * sf)
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
