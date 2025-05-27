@@ -85,8 +85,8 @@ class TelemetryBar(QWidget):
 
         painter.setPen(Qt.white)
         painter.setFont(QFont("Roboto", textH * 0.8, QFont.Bold))
-        text_rect = QRect(0, 0, w, textH)
-        painter.drawText(text_rect, Qt.AlignCenter | Qt.AlignVCenter, str(self._value))
+        textRect = QRect(0, 0, w, textH)
+        painter.drawText(textRect, Qt.AlignCenter | Qt.AlignVCenter, str(self._value))
 
         borderWidth = 1
         outer = QRect(
