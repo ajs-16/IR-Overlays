@@ -4,6 +4,7 @@ from PySide6.QtWidgets import QWidget, QHBoxLayout
 import pyqtgraph as pg
 from collections import deque
 import math
+from .base_overlay import BaseOverlay
 
 pg.setConfigOptions(antialias=True)
 
@@ -214,14 +215,9 @@ class TelemetryWheel(QWidget):
 
         painter.restore()
 
-class InputTelemetryOverlay(QWidget):
+class InputTelemetryOverlay(BaseOverlay):
     def __init__(self, worker, settings):
-        super().__init__()
-        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)
-        self.setAttribute(Qt.WA_TranslucentBackground)
-        self.baseWidth = 470
-        self.baseHeight = 110
-
+        super().__init__(settings, base_width=470, base_height=110)
         self.layout = QHBoxLayout(self)
         self.layout.setAlignment(Qt.AlignLeft)
 
@@ -235,10 +231,7 @@ class InputTelemetryOverlay(QWidget):
         self.layout.addWidget(self.throttleBar)
         self.layout.addWidget(self.wheel)
 
-        self._drag_pos = None
-
         self.apply_scaling(settings['Scale'].slider.value())
-        settings['Scale'].scaleChanged.connect(self.apply_scaling)
 
     def paintEvent(self, event: QPaintEvent):
         w = self.width()
@@ -271,11 +264,11 @@ class InputTelemetryOverlay(QWidget):
         painter.end()
     
     def apply_scaling(self, scale):
+        super().apply_scaling(scale)
+
         sf = scale / 100
         newWidth = int(self.baseWidth * sf)
-        newHeight = int(self.baseHeight * sf)
 
-        self.setFixedSize(newWidth, newHeight)
         self.layout.setContentsMargins(newWidth * 0.02, 0, 0, 0)
         self.layout.setSpacing(newWidth * 0.012)
 
@@ -283,13 +276,3 @@ class InputTelemetryOverlay(QWidget):
         self.brakeBar.setFixedSize(20 * sf, 100 * sf)
         self.throttleBar.setFixedSize(20 * sf, 100 * sf)
         self.wheel.setFixedSize(100 * sf, 100 * sf)
-
-    def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            self._drag_pos = event.globalPosition().toPoint() - self.frameGeometry().topLeft()
-            event.accept()
-
-    def mouseMoveEvent(self, event):
-        if self._drag_pos is not None and event.buttons() & Qt.LeftButton:
-            self.move(event.globalPosition().toPoint() - self._drag_pos)
-            event.accept()
