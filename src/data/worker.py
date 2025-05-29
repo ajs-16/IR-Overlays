@@ -46,7 +46,12 @@ class IRacingDataWorker(QObject):
                 'brake': round(self.ir['BrakeRaw'] * 100),
                 'gear': self.convert_gear(self.ir['Gear']),
                 'speed': round(self.ir['Speed']),
-                'wheelAngle': self.ir['SteeringWheelAngle']
+                'wheelAngle': self.ir['SteeringWheelAngle'],
+                'CarIdxLapDistPct': self.ir['CarIdxLapDistPct'],
+                'CarDistAhead': self.ir['CarDistAhead'],
+                'CarDistBehind': self.ir['CarDistBehind'],
+                'CarLeftRight': self.ir['CarLeftRight'],
+                'CarIdxLapDistPct': self.ir['CarIdxLapDistPct']
             }
 
             self.updatedTelemetry.emit(telemetry)
