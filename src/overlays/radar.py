@@ -6,14 +6,16 @@ class RadarOverlay(BaseOverlay):
     def __init__(self, worker, settings):
         super().__init__(settings, base_width=150, base_height=150)
         self.apply_scaling(settings['Scale'].slider.value())
-        self.range = 15 # Meters
+        self.range = settings['Range'].slider.value()
         self.telemetry = {}
 
         worker.updatedTelemetry.connect(self._update_radar)
+        settings['Range'].rangeChanged.connect(self._update_range)        
 
     def paintEvent(self, event):
         w = self.width()
         h = self.height()
+        carH = 4
 
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
@@ -26,16 +28,26 @@ class RadarOverlay(BaseOverlay):
         if not self.telemetry:
             return
         
+        adjustedDistAhead = self.telemetry['CarDistAhead'] - (carH / 2)
+        adjustedDistBehind = self.telemetry['CarDistBehind'] - (carH / 2)
+
         # Ahead/Behind warning lines
-        if self.telemetry['CarDistAhead'] <= self.range / 2:
-            self.DrawABWarning(
-                self.telemetry['CarDistAhead']
+        if adjustedDistAhead <= self.range / 2 and adjustedDistAhead > carH / 2:
+            self.draw_ab_warning(
+                adjustedDistAhead
             )
         
-        if self.telemetry['CarDistBehind'] <= self.range / 2:
-            self.DrawABWarning(
-                -self.telemetry['CarDistBehind']
+        if adjustedDistBehind <= self.range / 2 and adjustedDistBehind > carH / 2:
+            self.draw_ab_warning(
+                -adjustedDistBehind
             )
+
+        # Draw Right/Left warnings
+        if self.telemetry['CarLeftRight'] in [3, 6, 4]: # Car Right
+            self.draw_lr_warning('right')
+        
+        if self.telemetry['CarLeftRight'] in [2, 5, 4]: # Car Left
+            self.draw_lr_warning('left')
 
     def draw_grid(self):
         w = self.width()
@@ -74,7 +86,7 @@ class RadarOverlay(BaseOverlay):
         )
         painter.end()
     
-    def DrawABWarning(self, distance):
+    def draw_ab_warning(self, distance):
         w = self.width()
         h = self.height()
         PxPerM = h / self.range
@@ -100,9 +112,58 @@ class RadarOverlay(BaseOverlay):
     
         painter.setBrush(gradient)
         painter.setPen(Qt.NoPen)
-        painter.drawRect(rect)
+
+        xRad = w / 2
+        yRad = rect.height()
+        
+        painter.drawRoundedRect(rect, xRad, yRad)
     
         painter.end()
+    
+    def draw_lr_warning(self, side):
+        w, h = self.width(), self.height()
+        PxPerM = h / self.range
+        carW, carH = 2 * PxPerM, 4 * PxPerM
+        centerX, centerY = w / 2, h / 2
+
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+
+        if side == 'right':
+            xPos = centerX + carW/2
+            rect = QRect(
+                int(xPos),
+                int(centerY - carH/2),
+                int(w - xPos),
+                int(carH)
+            )
+            
+            gradient = QLinearGradient(xPos, 0, w, 0)
+            gradient.setColorAt(0, QColor(255, 0, 0, 100))
+            gradient.setColorAt(1, QColor(255, 0, 0, 0))
+
+        if side == 'left':
+            xPos = centerX - carW/2
+            rect = QRect(
+                0,
+                int(centerY - carH/2),
+                int(xPos),
+                int(carH)
+            )
+
+            gradient = QLinearGradient(0, 0, xPos, 0)
+            gradient.setColorAt(0, QColor(255, 0, 0, 0))
+            gradient.setColorAt(1, QColor(255, 0, 0, 100))
+
+        painter.setBrush(gradient)
+        painter.setPen(Qt.NoPen)
+        painter.drawRect(rect)
+
+        painter.end()
+
+    def _update_range(self, value):
+        self.range = value
+        self.update()
 
     def _update_radar(self, telemetry):
         self.telemetry = telemetry

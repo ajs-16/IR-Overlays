@@ -62,7 +62,7 @@ class MainWindow(QMainWindow):
         layout.setAlignment(Qt.AlignTop)
         
         # Title
-        title = QLabel("Enable Overlays")
+        title = QLabel("IRacing Overlays")
         title.setFont(QFont("Roboto", 13))
         title.setStyleSheet("color: #e0e3e7;")
         layout.addWidget(title)

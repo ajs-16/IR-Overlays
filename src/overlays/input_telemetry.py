@@ -47,8 +47,8 @@ class TelemetryGraph(pg.PlotWidget):
         self._brakeBuffer = deque(maxlen=500)
         self._throttleBuffer = deque(maxlen=500)
 
-        self._brakeLine = self.plot(pen=pg.mkPen('r', width=4))
-        self._throttleLine = self.plot(pen=pg.mkPen('g', width=4))
+        self._brakeLine = self.plot(pen=pg.mkPen('r', width=3))
+        self._throttleLine = self.plot(pen=pg.mkPen('g', width=3))
         
         # Update the graph on updated telemetry signal
         worker.updatedTelemetry.connect(self.update_graph)
@@ -85,7 +85,7 @@ class TelemetryBar(QWidget):
         barH = h - textH
 
         painter.setPen(Qt.white)
-        painter.setFont(QFont("Roboto", textH * 0.8, QFont.Bold))
+        painter.setFont(QFont("Roboto", textH * 0.7, QFont.Bold))
         textRect = QRect(0, 0, w, textH)
         painter.drawText(textRect, Qt.AlignCenter | Qt.AlignVCenter, str(self._value))
 

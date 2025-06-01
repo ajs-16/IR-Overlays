@@ -21,6 +21,7 @@ class MenuItem(QWidget):
             border: 1px solid #404958;
             border-radius: 2px;
         """)
+        self._init_state()
         self._init_ui()
 
         self.overlaySettings = {}
@@ -30,8 +31,8 @@ class MenuItem(QWidget):
             IRWorker,
             self.overlaySettings
         )
-          
-        self._load_state()
+
+        self.checkbox.setChecked(appState.state[self.overlayLabel]['enabled'])
 
     def _init_ui(self):
         self.MainVLayout = QVBoxLayout(self)
@@ -111,14 +112,13 @@ class MenuItem(QWidget):
         self.dropdownContent.setStyleSheet("border: none;")
         self.dropdownContent.hide()
 
-    def _load_state(self):
-        if appState.state.get(self.overlayLabel, None):
-            self.checkbox.setChecked(appState.state[self.overlayLabel]['enabled'])
-        else:
+    def _init_state(self):
+        if not appState.state.get(self.overlayLabel, None):
             appState.state[self.overlayLabel] = {
                 'enabled': False,
                 'pos': QPoint(0, 0),
-                'scale': 100
+                'scale': 100,
+                'range': 30
             }
 
     def _load_settings(self, settings):
