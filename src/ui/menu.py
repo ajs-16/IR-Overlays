@@ -1,4 +1,4 @@
-from PySide6.QtCore import QSize, Qt, QThread, QTimer
+from PySide6.QtCore import QSize, Qt, QThread, QTimer, QPoint
 from PySide6.QtWidgets import (
     QMainWindow, QVBoxLayout,
     QWidget, QLabel, QFrame,
@@ -18,6 +18,7 @@ class MainWindow(QMainWindow):
         self.icon.addFile("src/assets/IR_LOGO.png")
         self.setWindowIcon(self.icon)
         self.setFixedSize(QSize(250, 300))
+        self.move(state.value("MainWindow/pos", QPoint(100, 100)))
 
         self.setAutoFillBackground(True)
         palette = self.palette()
@@ -90,6 +91,8 @@ class MainWindow(QMainWindow):
         for overlay in OverlayType:
             menuItem = self.findChild(QWidget, f"menu_item_{overlay.label}")
             state.setValue(f"{overlay.label}/pos", menuItem.overlayWidget.pos())
+
+        state.setValue("MainWindow/pos", self.pos())
 
         self.irThread.quit()
         self.irThread.wait()
