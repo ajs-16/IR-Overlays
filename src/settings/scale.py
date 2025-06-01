@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QSlider
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QFont
-from state import appState
+from state import state
 
 class Scale(QWidget):
     scaleChanged = Signal(int)
@@ -24,7 +24,7 @@ class Scale(QWidget):
         self.slider = QSlider(Qt.Horizontal)
         self.slider.setMinimum(75)
         self.slider.setMaximum(125)
-        self.slider.setValue(appState.state[self.overlayLabel]['scale'])
+        self.slider.setValue(state.value(f"{self.overlayLabel}/scale", defaultValue=100, type=int))
         self.slider.valueChanged.connect(self._update_state)
         self.slider.setStyleSheet("""
             QSlider::groove:horizontal {
@@ -46,5 +46,5 @@ class Scale(QWidget):
         layout.addWidget(self.slider)
 
     def _update_state(self):
-        appState.state[self.overlayLabel]['scale'] = self.slider.value()
+        state.setValue(f"{self.overlayLabel}/scale", self.slider.value())
         self.scaleChanged.emit(self.slider.value())

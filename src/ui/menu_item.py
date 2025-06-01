@@ -4,8 +4,8 @@ from PySide6.QtWidgets import (
     QHBoxLayout, QPushButton, QLabel, QFrame
 )
 from PySide6.QtGui import QFont
-from state import appState
 import qtawesome as qta
+from state import state
 
 class MenuItem(QWidget):
     def __init__(self, overlay, IRWorker):
@@ -21,7 +21,6 @@ class MenuItem(QWidget):
             border: 1px solid #404958;
             border-radius: 2px;
         """)
-        self._init_state()
         self._init_ui()
 
         self.overlaySettings = {}
@@ -32,7 +31,7 @@ class MenuItem(QWidget):
             self.overlaySettings
         )
 
-        self.checkbox.setChecked(appState.state[self.overlayLabel]['enabled'])
+        self.checkbox.setChecked(state.value(f"{self.overlayLabel}/enabled", False, type=bool))
 
     def _init_ui(self):
         self.MainVLayout = QVBoxLayout(self)
@@ -112,15 +111,6 @@ class MenuItem(QWidget):
         self.dropdownContent.setStyleSheet("border: none;")
         self.dropdownContent.hide()
 
-    def _init_state(self):
-        if not appState.state.get(self.overlayLabel, None):
-            appState.state[self.overlayLabel] = {
-                'enabled': False,
-                'pos': QPoint(0, 0),
-                'scale': 100,
-                'range': 30
-            }
-
     def _load_settings(self, settings):
         for setting in settings:
             widget = setting(self.overlayLabel)
@@ -139,10 +129,9 @@ class MenuItem(QWidget):
         sender = self.sender()
 
         if sender.isChecked():
-            self.overlayWidget.move(appState.state[self.overlayLabel]['pos'])
+            self.overlayWidget.move(state.value(f"{self.overlayLabel}/pos", defaultValue=QPoint(0, 0)))
             self.overlayWidget.show()
-            appState.state[self.overlayLabel]['enabled'] = True
+            state.setValue(f"{self.overlayLabel}/enabled", True)
         else:
-            appState.state[self.overlayLabel]['pos'] = self.overlayWidget.pos()
             self.overlayWidget.hide()
-            appState.state[self.overlayLabel]['enabled'] = False
+            state.setValue(f"{self.overlayLabel}/enabled", False)

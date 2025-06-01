@@ -7,9 +7,8 @@ from PySide6.QtWidgets import (
 from PySide6.QtGui import QIcon, QPalette, QColor, QFont
 from overlays.overlays import OverlayType
 from data.worker import IRacingDataWorker
-import pickle
-from state import appState
 from .menu_item import MenuItem
+from state import state
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -90,12 +89,9 @@ class MainWindow(QMainWindow):
     def closeEvent(self, event):
         for overlay in OverlayType:
             menuItem = self.findChild(QWidget, f"menu_item_{overlay.label}")
-            appState.state[overlay.label]['pos'] = menuItem.overlayWidget.pos()
+            state.setValue(f"{overlay.label}/pos", menuItem.overlayWidget.pos())
 
         self.irThread.quit()
         self.irThread.wait()
-
-        with open('src/tmp/state.pickle', 'wb') as f:
-            pickle.dump(appState.state, f)
 
         super().closeEvent(event)
