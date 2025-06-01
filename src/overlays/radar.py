@@ -1,5 +1,5 @@
 from .base_overlay import BaseOverlay
-from PySide6.QtGui import QPainter, QColor, QPen, QLinearGradient
+from PySide6.QtGui import QPainter, QColor, QPen, QLinearGradient, QPainterPath
 from PySide6.QtCore import Qt, QRect
 
 class RadarOverlay(BaseOverlay):
@@ -90,34 +90,36 @@ class RadarOverlay(BaseOverlay):
         w = self.width()
         h = self.height()
         PxPerM = h / self.range
-    
+
         yPos = int(h / 2 - distance * PxPerM)
         ahead = distance > 0
-    
+
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
-    
+
         gradient = QLinearGradient()
         gradient.setStart(0, yPos)
 
+        path = QPainterPath()
+        path.moveTo(0, yPos)
+        path.lineTo(w, yPos)
+
         if ahead:
             gradient.setFinalStop(0, 0)
-            rect = QRect(0, 0, w, yPos)
+            path.arcTo(0, 0, w, yPos*2, 0, 180)
         else:
             gradient.setFinalStop(0, h)
-            rect = QRect(0, yPos, w, h - yPos)
-        
+            path.arcTo(0, 2*yPos-h, w, (h-yPos)*2, 0, -180)
+
+        path.closeSubpath()
+
         gradient.setColorAt(0, QColor(255, 255, 0, 100))
         gradient.setColorAt(1, QColor(255, 255, 0, 0))
-    
+
         painter.setBrush(gradient)
         painter.setPen(Qt.NoPen)
 
-        xRad = w / 2
-        yRad = rect.height()
-        
-        painter.drawRoundedRect(rect, xRad, yRad)
-    
+        painter.drawPath(path)  
         painter.end()
     
     def draw_lr_warning(self, side):
