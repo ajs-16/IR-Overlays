@@ -1,3 +1,5 @@
+import os
+import sys
 from PySide6.QtCore import QSize, Qt, QThread, QTimer, QPoint
 from PySide6.QtWidgets import (
     QMainWindow, QVBoxLayout,
@@ -14,9 +16,16 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("IRO")
-        self.icon = QIcon()
-        self.icon.addFile("src/assets/IR_LOGO.png")
-        self.setWindowIcon(self.icon)
+
+        if getattr(sys, "frozen", False):
+            baseDir = sys._MEIPASS
+        else:
+            baseDir = "src"
+    
+        iconPath = os.path.join(baseDir, "assets", "IRO_LOGO.png")
+        icon = QIcon(iconPath)
+        self.setWindowIcon(icon)
+
         self.setFixedSize(QSize(250, 300))
         self.move(state.value("MainWindow/pos", QPoint(100, 100)))
 
