@@ -9,7 +9,7 @@ IR Overlays is a telemetry visualisation tool designed for use with IRacing. It 
 
 ### Key Features
 
--   Overlays: Input Telemetry, Radar, and more.
+-   Overlays: Input Telemetry, Radar, and more to come.
 -   Drag and drop overlays into desired positions.
 -   Save overlay positions and configurations between sessions.
 -   Developed using Python and the PySide6 GUI framework.
@@ -81,6 +81,12 @@ To set up the development environment for IR Overlays:
 
     ```bash
     python src/main.py
+    ```
+
+3. Run tests:
+
+    ```bash
+    pytest
     ```
 
 ## Contributing

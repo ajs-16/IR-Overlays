@@ -9,3 +9,5 @@ PyYAML==6.0.2
 QtAwesome==1.4.0
 QtPy==2.4.3
 shiboken6==6.9.0
+pytest==8.4.0
+pytest-qt==4.4.0

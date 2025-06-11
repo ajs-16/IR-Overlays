@@ -3,3 +3,4 @@ __pycache__
 data.bin
 dist
 build
+.pytest_cache
