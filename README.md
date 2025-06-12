@@ -3,13 +3,21 @@
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Version](https://img.shields.io/badge/version-1.0.0-green.svg)
 
+![menu](https://github.com/user-attachments/assets/22f1d31f-6f91-40a7-826f-5e086951c3f8)
+
 ## Project Overview
 
 IR Overlays is a telemetry visualisation tool designed for use with IRacing. It provides real-time, customisable overlays that display useful telemetry data during gameplay. The application was built with a focus on performance, efficiency and user experience.
 
+### Overlays
+
+  | Input Telemetry                                    | Radar                                            |
+  |:--------------------------------------------------:|:------------------------------------------------:|
+  | ![input_telemetry](https://github.com/user-attachments/assets/c666f5fc-7bad-4700-92d2-5482d3d08708) | ![radar](https://github.com/user-attachments/assets/6df11d7b-f028-4c2b-9d24-829b90ed8f4b) |
+
 ### Key Features
 
--   Overlays: Input Telemetry, Radar, and more to come.
+-   Overlays: Input Telemetry, Radar, and more to come...
 -   Drag and drop overlays into desired positions.
 -   Save overlay positions and configurations between sessions.
 -   Developed using Python and the PySide6 GUI framework.
@@ -20,7 +28,6 @@ IR Overlays is a telemetry visualisation tool designed for use with IRacing. It 
 -   [Development Environment Setup](#development-environment-setup)
 -   [Contributing](#contributing)
 -   [License](#license)
--   [Contact](#contact)
 
 ## Installation
 
